@@ -1,0 +1,24 @@
+# Python / Django
+__pycache__/
+*.pyc
+nutria_backend_env/
+db.sqlite3
+media/
+staticfiles/
+.env
+django_server.log
+
+# Flutter
+nutria_app/build/
+nutria_app/.dart_tool/
+nutria_app/android/.gradle/
+nutria_app/android/local.properties
+nutria_app/ios/Pods/
+nutria_app/ios/Flutter/Flutter.podspec
+nutria_app/.flutter-plugins
+nutria_app/.flutter-plugins-dependencies
+
+# Editor / SO
+.DS_Store
+.vscode/
+.idea/
