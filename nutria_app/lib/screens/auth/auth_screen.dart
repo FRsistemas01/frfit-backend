@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import '../../widgets/nutria_route.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/api_client.dart';
 import '../../theme/app_theme.dart';
 import '../home/root_shell.dart';
 import '../onboarding/onboarding_screen.dart';
+
+// Client ID "Web" de Google Cloud — es el que valida el backend, no el de
+// Android. google_sign_in lo necesita para que el id_token que emite tenga
+// ese client ID como audience.
+const _googleServerClientId = '885557456922-27jf8e3te2dljetm7m7j0utfmig98pej.apps.googleusercontent.com';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -17,6 +23,7 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   bool _isLogin = true;
   bool _loading = false;
+  bool _googleLoading = false;
   String? _error;
   final _userCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
@@ -55,6 +62,54 @@ class _AuthScreenState extends State<AuthScreen> {
       return;
     }
 
+    await _goToNextScreen();
+  }
+
+  Future<void> _continueWithGoogle() async {
+    setState(() {
+      _googleLoading = true;
+      _error = null;
+    });
+
+    try {
+      final googleUser = await GoogleSignIn(serverClientId: _googleServerClientId).signIn();
+      if (googleUser == null) {
+        // El usuario cerró el selector de cuentas sin elegir ninguna.
+        setState(() => _googleLoading = false);
+        return;
+      }
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+      if (idToken == null) {
+        setState(() {
+          _googleLoading = false;
+          _error = 'Google no devolvió las credenciales esperadas — probá de nuevo.';
+        });
+        return;
+      }
+
+      final error = await ApiClient.instance.loginWithGoogle(idToken);
+      if (!mounted) return;
+
+      if (error != null) {
+        setState(() {
+          _googleLoading = false;
+          _error = error;
+        });
+        return;
+      }
+
+      await _goToNextScreen();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _googleLoading = false;
+        _error = 'No se pudo iniciar sesión con Google — probá de nuevo.';
+      });
+    }
+  }
+
+  Future<void> _goToNextScreen() async {
     final prefs = await SharedPreferences.getInstance();
     final onboardingDone = prefs.getBool('onboarding_done') ?? false;
     if (!mounted) return;
@@ -193,6 +248,28 @@ class _AuthScreenState extends State<AuthScreen> {
                   child: _loading
                       ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                       : Text(_isLogin ? 'Entrar' : 'Crear cuenta'),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Row(
+                children: [
+                  const Expanded(child: Divider(color: AppColors.border)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                    child: Text('o', style: Theme.of(context).textTheme.bodySmall),
+                  ),
+                  const Expanded(child: Divider(color: AppColors.border)),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: (_loading || _googleLoading) ? null : _continueWithGoogle,
+                  icon: _googleLoading
+                      ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.textPrimary))
+                      : const Text('G', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                  label: Text(_isLogin ? 'Continuar con Google' : 'Registrarme con Google'),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
