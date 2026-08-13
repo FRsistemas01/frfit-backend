@@ -48,10 +48,13 @@ class ApiClient {
     }
   }
 
-  Future<String?> register(String username, String password) async {
+  Future<String?> register(String username, String password, {String? email}) async {
     try {
       final res = await http
-          .post(Uri.parse('${ApiConfig.baseUrl}/auth/register/'), body: {'username': username, 'password': password})
+          .post(
+            Uri.parse('${ApiConfig.baseUrl}/auth/register/'),
+            body: {'username': username, 'password': password, if (email != null && email.isNotEmpty) 'email': email},
+          )
           .timeout(const Duration(seconds: 25));
       if (res.statusCode == 201) {
         _token = jsonDecode(res.body)['token'];
@@ -62,6 +65,22 @@ class ApiClient {
       return body['detail'] ?? 'No se pudo crear la cuenta.';
     } catch (_) {
       return 'No se pudo conectar con el servidor.';
+    }
+  }
+
+  /// Pide el link de recuperación de contraseña. Devuelve un mensaje para
+  /// mostrarle al usuario tanto si funcionó como si hubo un error de red —
+  /// el backend ya responde con un mensaje genérico para no filtrar qué
+  /// emails están registrados.
+  Future<String> requestPasswordReset(String email) async {
+    try {
+      final res = await http
+          .post(Uri.parse('${ApiConfig.baseUrl}/auth/password-reset/'), body: {'email': email})
+          .timeout(const Duration(seconds: 15));
+      final body = jsonDecode(res.body);
+      return body['detail'] ?? 'Si existe una cuenta con ese email, te mandamos un link para recuperarla.';
+    } catch (_) {
+      return 'No se pudo conectar con el servidor. Probá de nuevo.';
     }
   }
 
