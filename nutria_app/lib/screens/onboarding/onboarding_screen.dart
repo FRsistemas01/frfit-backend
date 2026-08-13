@@ -22,6 +22,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String _sex = 'm';
   String _activity = 'moderate';
   final _weightCtrl = TextEditingController(text: '75');
+  final _targetWeightCtrl = TextEditingController();
   final _heightCtrl = TextEditingController(text: '170');
   final _ageCtrl = TextEditingController(text: '30');
   bool _loading = false;
@@ -74,6 +75,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       age: _age,
       sex: _sex,
       activityLevel: _activity,
+      targetWeightKg: _goal == 'maintain' ? _weight : double.tryParse(_targetWeightCtrl.text),
     );
     if (!mounted) return;
     if (profile == null) {
@@ -204,6 +206,10 @@ class _BodyStep extends StatelessWidget {
               Expanded(child: _NumField(label: 'Altura (cm)', controller: state._heightCtrl)),
             ],
           ),
+          if (state._goal != 'maintain') ...[
+            const SizedBox(height: AppSpacing.sm),
+            _NumField(label: 'Peso objetivo (kg)', controller: state._targetWeightCtrl),
+          ],
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
