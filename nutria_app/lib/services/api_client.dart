@@ -68,6 +68,26 @@ class ApiClient {
     }
   }
 
+  /// Login/registro con el id_token que ya validó Google Sign-In del lado
+  /// del celular — el servidor lo vuelve a validar contra Google antes de
+  /// confiar en él.
+  Future<String?> loginWithGoogle(String idToken) async {
+    try {
+      final res = await http
+          .post(Uri.parse('${ApiConfig.baseUrl}/auth/google/'), body: {'id_token': idToken})
+          .timeout(const Duration(seconds: 25));
+      if (res.statusCode == 200) {
+        _token = jsonDecode(res.body)['token'];
+        await _persistToken();
+        return null;
+      }
+      final body = jsonDecode(res.body);
+      return body['detail'] ?? 'No se pudo iniciar sesión con Google.';
+    } catch (_) {
+      return 'No se pudo conectar con el servidor.';
+    }
+  }
+
   /// Pide el link de recuperación de contraseña. Devuelve un mensaje para
   /// mostrarle al usuario tanto si funcionó como si hubo un error de red —
   /// el backend ya responde con un mensaje genérico para no filtrar qué

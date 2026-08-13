@@ -37,6 +37,14 @@ PREMIUM_PRICE_ANNUAL = int(os.environ.get('PREMIUM_PRICE_ANNUAL', 54000))  # $4.
 # Dominio público de la app — para armar los back_urls que le pasamos a MP.
 PUBLIC_BASE_URL = os.environ.get('PUBLIC_BASE_URL', 'https://frfit-backend.onrender.com')
 
+# Google Sign-In — el client ID "Web" (no el de Android). Es el "audience"
+# contra el que se valida el id_token que manda la app; google_sign_in en
+# Android lo emite con este client ID cuando se configura serverClientId.
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get(
+    'GOOGLE_OAUTH_CLIENT_ID',
+    '885557456922-27jf8e3te2dljetm7m7j0utfmig98pej.apps.googleusercontent.com',
+)
+
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # En local, si no está en el .env, se usa el valor de desarrollo de siempre.

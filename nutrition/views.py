@@ -12,6 +12,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from google.auth.transport import requests as google_auth_requests
+from google.oauth2 import id_token as google_id_token
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
@@ -80,6 +82,42 @@ def register(request):
     Profile.objects.create(user=user)
     token, _ = Token.objects.get_or_create(user=user)
     return Response({"token": token.key, "user_id": user.id}, status=201)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def google_login(request):
+    """Login/registro con Google — la app manda el id_token que le dio Google
+    Sign-In y acá se valida contra los servidores de Google antes de confiar
+    en el email que dice traer (nunca se confía en un id_token sin validar)."""
+    token = request.data.get("id_token")
+    if not token:
+        return Response({"detail": "Falta el id_token."}, status=400)
+
+    try:
+        payload = google_id_token.verify_oauth2_token(token, google_auth_requests.Request(), settings.GOOGLE_OAUTH_CLIENT_ID)
+    except ValueError:
+        return Response({"detail": "Token de Google inválido."}, status=400)
+
+    email = payload.get("email")
+    if not email:
+        return Response({"detail": "Google no devolvió un email."}, status=400)
+
+    user = User.objects.filter(email=email).first()
+    if user is None:
+        base_username = email.split("@")[0]
+        username = base_username
+        suffix = 1
+        while User.objects.filter(username=username).exists():
+            suffix += 1
+            username = f"{base_username}{suffix}"
+        user = User.objects.create_user(username=username, email=email)
+        user.set_unusable_password()  # esta cuenta solo entra por Google
+        user.save()
+        Profile.objects.create(user=user)
+
+    token_obj, _ = Token.objects.get_or_create(user=user)
+    return Response({"token": token_obj.key, "user_id": user.id})
 
 
 @api_view(["POST"])

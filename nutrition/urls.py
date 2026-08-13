@@ -6,6 +6,7 @@ from . import billing_views, views
 urlpatterns = [
     path("auth/register/", views.register, name="register"),
     path("auth/login/", obtain_auth_token, name="login"),
+    path("auth/google/", views.google_login, name="google-login"),
     path("auth/password-reset/", views.password_reset_request, name="password-reset-request"),
     path("auth/password-reset/confirm/<uidb64>/<token>/", views.password_reset_confirm, name="password-reset-confirm"),
     path("profile/", views.profile_view, name="profile"),
