@@ -48,37 +48,15 @@ class _Bootstrap extends StatefulWidget {
   State<_Bootstrap> createState() => _BootstrapState();
 }
 
-class _BootstrapState extends State<_Bootstrap> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _fade;
-
+class _BootstrapState extends State<_Bootstrap> {
   @override
   void initState() {
     super.initState();
-    // Pantalla de carga simple (marca + spinner) en vez de tratar de
-    // continuar el ícono grande de la splash nativa de Android — ese tamaño
-    // varía según el launcher/fabricante y siempre se terminaba viendo como
-    // un salto al pasar a esta pantalla.
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 500))..forward();
-    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
     _init();
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
   Future<void> _init() async {
-    // Corren en paralelo con la animación de entrada — pero le damos a la
-    // splash un mínimo de tiempo en pantalla para que no sea un parpadeo
-    // cuando restaurar la sesión es instantáneo (datos locales).
-    final results = await Future.wait([
-      ApiClient.instance.restoreSession(),
-      Future.delayed(const Duration(milliseconds: 900)),
-    ]);
-    final hasSession = results[0] as bool;
+    final hasSession = await ApiClient.instance.restoreSession();
     if (!mounted) return;
 
     if (!hasSession) {
@@ -100,23 +78,20 @@ class _BootstrapState extends State<_Bootstrap> with SingleTickerProviderStateMi
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: Center(
-        child: FadeTransition(
-          opacity: _fade,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'FRfit',
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: 0.4),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(color: AppColors.accent, strokeWidth: 2.5),
-              ),
-            ],
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'FRfit',
+              style: TextStyle(color: AppColors.textPrimary, fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: 0.4),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(color: AppColors.accent, strokeWidth: 2.5),
+            ),
+          ],
         ),
       ),
     );
