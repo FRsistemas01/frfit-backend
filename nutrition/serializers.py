@@ -32,6 +32,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             "fat_target_g",
             "water_target_glasses",
             "fasting_window_hours",
+            "daily_steps_goal",
             "current_weight_kg",
             "target_weight_kg",
             "is_premium",

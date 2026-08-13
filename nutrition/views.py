@@ -176,10 +176,16 @@ def set_goal(request):
     return Response(ProfileSerializer(profile).data)
 
 
-@api_view(["GET"])
+@api_view(["GET", "PATCH"])
 @permission_classes([IsAuthenticated])
 def profile_view(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
+
+    if request.method == "PATCH":
+        serializer = ProfileSerializer(profile, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
     data = ProfileSerializer(profile).data
     data["username"] = request.user.username
     return Response(data)

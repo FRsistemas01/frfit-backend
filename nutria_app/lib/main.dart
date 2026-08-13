@@ -52,15 +52,18 @@ class _Bootstrap extends StatefulWidget {
 
 class _BootstrapState extends State<_Bootstrap> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  late final Animation<double> _fade;
-  late final Animation<double> _scale;
+  late final Animation<double> _iconFade;
+  late final Animation<double> _textFade;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 750))..forward();
-    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
-    _scale = Tween(begin: 0.86, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..forward();
+    // El ícono entra ya a tamaño final (sin escala) para que continúe la
+    // splash nativa de Android sin "salto" — solo el texto se anima, y entra
+    // un poco después para no competir con el ícono por la atención.
+    _iconFade = CurvedAnimation(parent: _controller, curve: const Interval(0, 0.4, curve: Curves.easeOut));
+    _textFade = CurvedAnimation(parent: _controller, curve: const Interval(0.35, 1, curve: Curves.easeOut));
     _init();
   }
 
@@ -100,34 +103,36 @@ class _BootstrapState extends State<_Bootstrap> with SingleTickerProviderStateMi
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: Center(
-        child: FadeTransition(
-          opacity: _fade,
-          child: ScaleTransition(
-            scale: _scale,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                GlowBackdrop(
-                  spread: 1.1,
-                  child: ConcentricRings(
-                    size: 96,
-                    strokeWidth: 9,
-                    gap: 11,
-                    rings: const [
-                      RingData(progress: 1, color: AppColors.accent),
-                      RingData(progress: 0.75, color: AppColors.accent70),
-                      RingData(progress: 0.5, color: AppColors.accent40),
-                    ],
-                  ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FadeTransition(
+              opacity: _iconFade,
+              child: GlowBackdrop(
+                spread: 1.3,
+                child: ConcentricRings(
+                  // Tamaño cercano al ícono grande que ya muestra la splash
+                  // nativa de Android antes de esto — así no se ve un salto.
+                  size: 176,
+                  strokeWidth: 15,
+                  gap: 19,
+                  rings: const [
+                    RingData(progress: 1, color: AppColors.accent),
+                    RingData(progress: 0.75, color: AppColors.accent70),
+                    RingData(progress: 0.5, color: AppColors.accent40),
+                  ],
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                const Text(
-                  'FRfit',
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: 0.4),
-                ),
-              ],
+              ),
             ),
-          ),
+            const SizedBox(height: AppSpacing.xl),
+            FadeTransition(
+              opacity: _textFade,
+              child: const Text(
+                'FRfit',
+                style: TextStyle(color: AppColors.textPrimary, fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: 0.4),
+              ),
+            ),
+          ],
         ),
       ),
     );
