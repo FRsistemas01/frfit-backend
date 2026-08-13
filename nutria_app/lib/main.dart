@@ -7,8 +7,6 @@ import 'screens/home/root_shell.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'services/api_client.dart';
 import 'theme/app_theme.dart';
-import 'widgets/concentric_rings.dart';
-import 'widgets/glow_backdrop.dart';
 
 void main() {
   runApp(const NutriaApp());
@@ -52,18 +50,17 @@ class _Bootstrap extends StatefulWidget {
 
 class _BootstrapState extends State<_Bootstrap> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  late final Animation<double> _iconFade;
-  late final Animation<double> _textFade;
+  late final Animation<double> _fade;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..forward();
-    // El ícono entra ya a tamaño final (sin escala) para que continúe la
-    // splash nativa de Android sin "salto" — solo el texto se anima, y entra
-    // un poco después para no competir con el ícono por la atención.
-    _iconFade = CurvedAnimation(parent: _controller, curve: const Interval(0, 0.4, curve: Curves.easeOut));
-    _textFade = CurvedAnimation(parent: _controller, curve: const Interval(0.35, 1, curve: Curves.easeOut));
+    // Pantalla de carga simple (marca + spinner) en vez de tratar de
+    // continuar el ícono grande de la splash nativa de Android — ese tamaño
+    // varía según el launcher/fabricante y siempre se terminaba viendo como
+    // un salto al pasar a esta pantalla.
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 500))..forward();
+    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
     _init();
   }
 
@@ -103,36 +100,23 @@ class _BootstrapState extends State<_Bootstrap> with SingleTickerProviderStateMi
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            FadeTransition(
-              opacity: _iconFade,
-              child: GlowBackdrop(
-                spread: 1.3,
-                child: ConcentricRings(
-                  // Tamaño cercano al ícono grande que ya muestra la splash
-                  // nativa de Android antes de esto — así no se ve un salto.
-                  size: 176,
-                  strokeWidth: 15,
-                  gap: 19,
-                  rings: const [
-                    RingData(progress: 1, color: AppColors.accent),
-                    RingData(progress: 0.75, color: AppColors.accent70),
-                    RingData(progress: 0.5, color: AppColors.accent40),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            FadeTransition(
-              opacity: _textFade,
-              child: const Text(
+        child: FadeTransition(
+          opacity: _fade,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
                 'FRfit',
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: 0.4),
+                style: TextStyle(color: AppColors.textPrimary, fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: 0.4),
               ),
-            ),
-          ],
+              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(color: AppColors.accent, strokeWidth: 2.5),
+              ),
+            ],
+          ),
         ),
       ),
     );

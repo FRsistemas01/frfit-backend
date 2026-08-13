@@ -18,6 +18,9 @@ nutria_app/ios/Flutter/Flutter.podspec
 nutria_app/.flutter-plugins
 nutria_app/.flutter-plugins-dependencies
 
+# Keystore de firma de Android — NUNCA subir esto a ningún repo.
+/android-keystore/
+
 # Editor / SO
 .DS_Store
 .vscode/
