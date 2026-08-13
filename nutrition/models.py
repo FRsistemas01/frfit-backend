@@ -38,6 +38,7 @@ class Profile(models.Model):
     fat_target_g = models.PositiveIntegerField(default=70)
     water_target_glasses = models.PositiveIntegerField(default=8)
     fasting_window_hours = models.PositiveIntegerField(default=16)
+    daily_steps_goal = models.PositiveIntegerField(default=8000, validators=[MinValueValidator(1000)])
     current_weight_kg = models.FloatField(null=True, blank=True, validators=[MinValueValidator(1)])
     target_weight_kg = models.FloatField(null=True, blank=True, validators=[MinValueValidator(1)])
     created_at = models.DateTimeField(auto_now_add=True)

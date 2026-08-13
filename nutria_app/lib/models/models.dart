@@ -12,6 +12,7 @@ class Profile {
     required this.fatTargetG,
     required this.waterTargetGlasses,
     required this.fastingWindowHours,
+    this.dailyStepsGoal = 8000,
     this.currentWeightKg,
     this.targetWeightKg,
   });
@@ -28,6 +29,7 @@ class Profile {
   final int fatTargetG;
   final int waterTargetGlasses;
   final int fastingWindowHours;
+  final int dailyStepsGoal;
   final double? currentWeightKg;
   final double? targetWeightKg;
 
@@ -44,6 +46,7 @@ class Profile {
         fatTargetG: j['fat_target_g'] ?? 70,
         waterTargetGlasses: j['water_target_glasses'] ?? 8,
         fastingWindowHours: j['fasting_window_hours'] ?? 16,
+        dailyStepsGoal: j['daily_steps_goal'] ?? 8000,
         currentWeightKg: (j['current_weight_kg'] as num?)?.toDouble(),
         targetWeightKg: (j['target_weight_kg'] as num?)?.toDouble(),
       );

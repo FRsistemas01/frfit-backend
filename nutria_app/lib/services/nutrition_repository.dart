@@ -61,6 +61,12 @@ class NutritionRepository {
     return null;
   }
 
+  Future<Profile?> updateStepsGoal(int steps) async {
+    final res = await _api.patch('/profile/', {'daily_steps_goal': steps});
+    if (res == null) return null;
+    return Profile.fromJson(res);
+  }
+
   Future<bool> updateFoodItem(
     int id, {
     required String name,

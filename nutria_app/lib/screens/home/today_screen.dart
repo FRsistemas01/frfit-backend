@@ -14,6 +14,7 @@ import '../../widgets/nutria_route.dart';
 import '../../widgets/retry_state.dart';
 import '../../widgets/section_label.dart';
 import '../../widgets/skeleton.dart';
+import '../../widgets/steps_goal_sheet.dart';
 import '../log_meal/log_meal_screen.dart';
 
 const _mealIcons = {'breakfast': '🍳', 'lunch': '🍗', 'snack': '🍎', 'dinner': '🍝'};
@@ -32,6 +33,7 @@ class _TodayScreenState extends State<TodayScreen> {
   int _waterGlasses = 5;
   String _username = '';
   double? _userWeightKg;
+  int _stepsGoal = 8000;
   WeeklyTrend? _trend;
   int? _steps;
   bool _stepsAvailable = true;
@@ -47,6 +49,7 @@ class _TodayScreenState extends State<TodayScreen> {
         setState(() {
           _username = p.username;
           _userWeightKg = p.currentWeightKg;
+          _stepsGoal = p.dailyStepsGoal;
         });
       }
     });
@@ -94,6 +97,13 @@ class _TodayScreenState extends State<TodayScreen> {
       _summary = summary;
       _waterGlasses = summary.waterGlasses;
     });
+  }
+
+  Future<void> _pickStepsGoal() async {
+    final goal = await showStepsGoalSheet(context, current: _stepsGoal);
+    if (goal == null) return;
+    setState(() => _stepsGoal = goal);
+    await NutritionRepository.instance.updateStepsGoal(goal);
   }
 
   Future<void> _setWater(int glasses) async {
@@ -218,10 +228,14 @@ class _TodayScreenState extends State<TodayScreen> {
             child: Row(
               children: [
                 Expanded(
-                  child: _QuickStat(
-                    icon: '👟',
-                    value: _stepsAvailable ? (_steps?.toString() ?? '…') : '—',
-                    label: _stepsAvailable ? 'pasos' : 'sin sensor',
+                  child: GestureDetector(
+                    onTap: _pickStepsGoal,
+                    child: _QuickStat(
+                      icon: '👟',
+                      value: _stepsAvailable ? (_steps?.toString() ?? '…') : '—',
+                      label: _stepsAvailable ? 'de $_stepsGoal' : 'sin sensor',
+                      highlighted: _stepsAvailable && (_steps ?? 0) >= _stepsGoal,
+                    ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
