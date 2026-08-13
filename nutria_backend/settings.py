@@ -29,6 +29,14 @@ COACH_CHAT_FREE_DAILY_LIMIT = int(os.environ.get('COACH_CHAT_FREE_DAILY_LIMIT', 
 SCAN_PHOTO_FREE_DAILY_LIMIT = int(os.environ.get('SCAN_PHOTO_FREE_DAILY_LIMIT', 3))
 RECIPES_FREE_LIMIT = int(os.environ.get('RECIPES_FREE_LIMIT', 5))
 
+# Mercado Pago — pago único por período (no suscripción con renovación
+# automática). Access Token de PRODUCCIÓN, sacado del panel de developers.
+MERCADOPAGO_ACCESS_TOKEN = os.environ.get('MERCADOPAGO_ACCESS_TOKEN', '')
+PREMIUM_PRICE_MONTHLY = int(os.environ.get('PREMIUM_PRICE_MONTHLY', 6500))
+PREMIUM_PRICE_ANNUAL = int(os.environ.get('PREMIUM_PRICE_ANNUAL', 54000))  # $4.500/mes x 12
+# Dominio público de la app — para armar los back_urls que le pasamos a MP.
+PUBLIC_BASE_URL = os.environ.get('PUBLIC_BASE_URL', 'https://frfit-backend.onrender.com')
+
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # En local, si no está en el .env, se usa el valor de desarrollo de siempre.

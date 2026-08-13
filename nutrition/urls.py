@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework.authtoken.views import obtain_auth_token
 
-from . import views
+from . import billing_views, views
 
 urlpatterns = [
     path("auth/register/", views.register, name="register"),
@@ -32,4 +32,7 @@ urlpatterns = [
     path("coach/save-plan/", views.save_meal_plan, name="save-meal-plan"),
     path("premium/status/", views.premium_status, name="premium-status"),
     path("premium/plan/", views.premium_plan, name="premium-plan"),
+    path("billing/create-preference/", billing_views.create_preference, name="billing-create-preference"),
+    path("billing/webhook/", billing_views.mercadopago_webhook, name="billing-webhook"),
+    path("billing/result/", billing_views.billing_result, name="billing-result"),
 ]

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../services/nutrition_repository.dart';
 import '../../theme/app_theme.dart';
@@ -19,16 +20,31 @@ class PremiumScreen extends StatefulWidget {
   State<PremiumScreen> createState() => _PremiumScreenState();
 }
 
-class _PremiumScreenState extends State<PremiumScreen> {
+class _PremiumScreenState extends State<PremiumScreen> with WidgetsBindingObserver {
   bool _annual = true;
   bool _loading = true;
   bool _isPremium = false;
+  bool _checkingOut = false;
   Map<String, dynamic>? _usage;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _load();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Al volver del navegador después de pagar, refrescamos el estado solos
+    // — no hace falta que el usuario haga nada para verse Premium.
+    if (state == AppLifecycleState.resumed) _load();
   }
 
   Future<void> _load() async {
@@ -39,6 +55,27 @@ class _PremiumScreenState extends State<PremiumScreen> {
       _isPremium = status?['is_premium'] == true;
       _usage = status?['usage'] as Map<String, dynamic>?;
     });
+  }
+
+  Future<void> _checkout() async {
+    setState(() => _checkingOut = true);
+    final url = await NutritionRepository.instance.createPremiumCheckout(_annual ? 'annual' : 'monthly');
+    if (!mounted) return;
+    setState(() => _checkingOut = false);
+
+    if (url == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo iniciar el pago — probá de nuevo.'), backgroundColor: AppColors.warnSoft),
+      );
+      return;
+    }
+
+    final opened = await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo abrir el navegador para pagar.'), backgroundColor: AppColors.warnSoft),
+      );
+    }
   }
 
   @override
@@ -83,19 +120,19 @@ class _PremiumScreenState extends State<PremiumScreen> {
             if (!_isPremium) ...[
               Row(
                 children: [
-                  Expanded(child: _PlanCard(label: 'Mensual', price: '\$4.900', selected: !_annual, onTap: () => setState(() => _annual = false))),
+                  Expanded(child: _PlanCard(label: 'Mensual', price: '\$6.500', selected: !_annual, onTap: () => setState(() => _annual = false))),
                   const SizedBox(width: AppSpacing.sm),
-                  Expanded(child: _PlanCard(label: 'Anual', price: '\$2.900', save: 'Ahorrás 40%', selected: _annual, onTap: () => setState(() => _annual = true))),
+                  Expanded(child: _PlanCard(label: 'Anual', price: '\$4.500/mes', save: 'Ahorrás 30%', selected: _annual, onTap: () => setState(() => _annual = true))),
                 ],
               ),
               const SizedBox(height: AppSpacing.lg),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('El cobro con Mercado Pago todavía no está conectado — ya viene.')),
-                  ),
-                  child: const Text('Quiero ser Premium'),
+                  onPressed: _checkingOut ? null : _checkout,
+                  child: _checkingOut
+                      ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Text('Quiero ser Premium'),
                 ),
               ),
             ],
