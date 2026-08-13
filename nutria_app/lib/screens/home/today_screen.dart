@@ -14,8 +14,8 @@ import '../../widgets/nutria_route.dart';
 import '../../widgets/retry_state.dart';
 import '../../widgets/section_label.dart';
 import '../../widgets/skeleton.dart';
-import '../../widgets/steps_goal_sheet.dart';
 import '../log_meal/log_meal_screen.dart';
+import '../steps/steps_screen.dart';
 
 const _mealIcons = {'breakfast': '🍳', 'lunch': '🍗', 'snack': '🍎', 'dinner': '🍝'};
 const _mealLabels = {'breakfast': 'Desayuno', 'lunch': 'Almuerzo', 'snack': 'Merienda', 'dinner': 'Cena'};
@@ -97,13 +97,6 @@ class _TodayScreenState extends State<TodayScreen> {
       _summary = summary;
       _waterGlasses = summary.waterGlasses;
     });
-  }
-
-  Future<void> _pickStepsGoal() async {
-    final goal = await showStepsGoalSheet(context, current: _stepsGoal);
-    if (goal == null) return;
-    setState(() => _stepsGoal = goal);
-    await NutritionRepository.instance.updateStepsGoal(goal);
   }
 
   Future<void> _setWater(int glasses) async {
@@ -229,7 +222,7 @@ class _TodayScreenState extends State<TodayScreen> {
               children: [
                 Expanded(
                   child: GestureDetector(
-                    onTap: _pickStepsGoal,
+                    onTap: () => Navigator.of(context).push(nutriaRoute(const StepsScreen())),
                     child: _QuickStat(
                       icon: '👟',
                       value: _stepsAvailable ? (_steps?.toString() ?? '…') : '—',

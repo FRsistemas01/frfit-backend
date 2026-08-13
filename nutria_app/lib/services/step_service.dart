@@ -28,17 +28,28 @@ class StepService {
   bool _available = true;
   bool get available => _available;
 
+  /// Último valor emitido — para que una pantalla que se abre después de
+  /// [start] pueda mostrar el número ya conocido sin esperar el próximo
+  /// evento del sensor (que puede tardar).
+  int? _lastValue;
+  int? get lastValue => _lastValue;
+
+  void _emit(int steps) {
+    _lastValue = steps;
+    _controller.add(steps);
+  }
+
   Future<void> start() async {
     try {
       if (kIsWeb) {
         _available = false;
-        _controller.add(0);
+        _emit(0);
         return;
       }
 
       if (!Platform.isAndroid && !Platform.isIOS) {
         _available = false;
-        _controller.add(0);
+        _emit(0);
         return;
       }
 
@@ -46,7 +57,7 @@ class StepService {
         final status = await Permission.activityRecognition.request();
         if (!status.isGranted) {
           _available = false;
-          _controller.add(0);
+          _emit(0);
           return;
         }
       }
@@ -69,11 +80,11 @@ class StepService {
             await prefs.setInt('steps_baseline_value', _baseline!);
           }
           final steps = (event.steps - _baseline!).clamp(0, 1000000);
-          _controller.add(steps);
+          _emit(steps);
         },
         onError: (_) {
           _available = false;
-          _controller.add(0);
+          _emit(0);
         },
         cancelOnError: true,
       );
@@ -81,7 +92,7 @@ class StepService {
       // Cualquier plataforma/entorno no soportado: estado honesto de "no
       // disponible", nunca una pantalla pegada esperando un valor que no va a llegar.
       _available = false;
-      _controller.add(0);
+      _emit(0);
     }
   }
 
