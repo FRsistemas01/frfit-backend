@@ -331,5 +331,13 @@ class NutritionRepository {
   /// cargó uno, o null si no hay conexión.
   Future<Map<String, dynamic>?> premiumPlan() => _api.get('/premium/plan/');
 
+  /// Arranca el pago con Mercado Pago para el plan elegido ('monthly' o
+  /// 'annual'). Devuelve la URL de checkout para abrir en el navegador, o
+  /// null si falló (sin conexión, o el servidor no tiene MP configurado).
+  Future<String?> createPremiumCheckout(String plan) async {
+    final res = await _api.post('/billing/create-preference/', {'plan': plan});
+    return res?['checkout_url'] as String?;
+  }
+
   bool get isConnected => _api.isConnected;
 }

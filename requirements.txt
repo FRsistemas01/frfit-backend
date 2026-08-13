@@ -19,6 +19,7 @@ httpcore==1.0.9
 httpx==0.28.1
 idna==3.18
 jiter==0.16.0
+mercadopago==3.5.0
 packaging==26.3
 pillow==12.3.0
 psycopg==3.3.4
