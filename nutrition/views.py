@@ -2,8 +2,16 @@ from datetime import date, timedelta
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.tokens import default_token_generator
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.mail import send_mail
 from django.db.models import Avg, Count
+from django.shortcuts import render
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
@@ -55,15 +63,84 @@ GOAL_KCAL_FORMULA = {
 def register(request):
     username = request.data.get("username")
     password = request.data.get("password")
+    email = (request.data.get("email") or "").strip()
     if not username or not password:
         return Response({"detail": "Usuario y contraseña son requeridos."}, status=400)
     if User.objects.filter(username=username).exists():
         return Response({"detail": "Ese usuario ya existe."}, status=400)
+    if email and User.objects.filter(email=email).exists():
+        return Response({"detail": "Ya hay una cuenta con ese email."}, status=400)
 
-    user = User.objects.create_user(username=username, password=password)
+    try:
+        validate_password(password, user=User(username=username))
+    except DjangoValidationError as exc:
+        return Response({"detail": " ".join(exc.messages)}, status=400)
+
+    user = User.objects.create_user(username=username, password=password, email=email)
     Profile.objects.create(user=user)
     token, _ = Token.objects.get_or_create(user=user)
     return Response({"token": token.key, "user_id": user.id}, status=201)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def password_reset_request(request):
+    """Pide el email y, si existe una cuenta con ese email, manda el link de
+    reseteo. Devuelve el mismo mensaje genérico exista o no la cuenta, para no
+    filtrar qué emails están registrados."""
+    email = (request.data.get("email") or "").strip()
+    generic_response = Response({"detail": "Si existe una cuenta con ese email, te mandamos un link para recuperarla."})
+    if not email:
+        return Response({"detail": "Falta el email."}, status=400)
+
+    user = User.objects.filter(email=email).first()
+    if not user:
+        return generic_response
+
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+    reset_path = reverse("password-reset-confirm", kwargs={"uidb64": uid, "token": token})
+    reset_url = request.build_absolute_uri(reset_path)
+
+    send_mail(
+        subject="Recuperar tu contraseña de FRfit",
+        message=f"Entrá a este link para elegir una contraseña nueva:\n\n{reset_url}\n\nSi no pediste esto, ignorá el mail.",
+        from_email=None,
+        recipient_list=[email],
+        fail_silently=True,
+    )
+    return generic_response
+
+
+def password_reset_confirm(request, uidb64, token):
+    """Página web simple (no es un endpoint de la API) donde el usuario elige
+    la contraseña nueva — así no hace falta manejar deep links de vuelta a la
+    app Flutter para algo tan puntual."""
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    token_valid = user is not None and default_token_generator.check_token(user, token)
+
+    if not token_valid:
+        return render(request, "nutrition/password_reset_confirm.html", {"token_valid": False})
+
+    if request.method == "POST":
+        password = request.POST.get("password", "")
+        password2 = request.POST.get("password2", "")
+        if password != password2:
+            return render(request, "nutrition/password_reset_confirm.html", {"token_valid": True, "error": "Las contraseñas no coinciden."})
+        try:
+            validate_password(password, user=user)
+        except DjangoValidationError as exc:
+            return render(request, "nutrition/password_reset_confirm.html", {"token_valid": True, "error": " ".join(exc.messages)})
+        user.set_password(password)
+        user.save()
+        return render(request, "nutrition/password_reset_confirm.html", {"token_valid": True, "done": True})
+
+    return render(request, "nutrition/password_reset_confirm.html", {"token_valid": True})
 
 
 @api_view(["POST"])

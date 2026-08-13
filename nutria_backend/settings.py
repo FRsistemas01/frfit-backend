@@ -154,7 +154,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-ar'
 
 # La app y sus usuarios son de Argentina: usar esta zona (no UTC) para que los
 # filtros por fecha (logged_at__date, etc.) coincidan con el "día de hoy" real
@@ -194,9 +194,15 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
+# Por defecto los emails (ej. "olvidé mi contraseña") se imprimen en la consola
+# del server en vez de enviarse — sirve para probar, pero para que lleguen de
+# verdad hay que configurar un proveedor SMTP real (ver EMAIL_* en .env.example)
+# y setear EMAIL_BACKEND a 'django.core.mail.backends.smtp.EmailBackend'.
 
-MAILERS = {
-    'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
-    },
-}
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'FRfit <no-reply@frfit.app>')
