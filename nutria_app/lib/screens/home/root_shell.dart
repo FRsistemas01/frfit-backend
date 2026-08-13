@@ -12,6 +12,7 @@ import '../premium/premium_screen.dart';
 import '../profile/profile_screen.dart';
 import '../progress/progress_screen.dart';
 import '../recipes/recipes_screen.dart';
+import '../steps/steps_screen.dart';
 import '../weight/weight_screen.dart';
 import 'today_screen.dart';
 
@@ -105,6 +106,11 @@ class _MoreTab extends StatelessWidget {
             onTap: () => Navigator.of(context).push(nutriaRoute(const FastingScreen())),
           ),
           _MoreRow(
+            icon: Icons.directions_walk_rounded,
+            label: 'Pasos',
+            onTap: () => Navigator.of(context).push(nutriaRoute(const StepsScreen())),
+          ),
+          _MoreRow(
             icon: Icons.person_outline,
             label: 'Tu perfil',
             onTap: () => Navigator.of(context).push(nutriaRoute(const ProfileScreen())),
@@ -126,7 +132,7 @@ class _MoreTab extends StatelessWidget {
           ),
           _MoreRow(
             icon: Icons.workspace_premium_outlined,
-            label: 'Nutria Pro',
+            label: 'FRfit Pro',
             onTap: () => Navigator.of(context).push(nutriaRoute(const PremiumScreen())),
           ),
           const SizedBox(height: AppSpacing.lg),
