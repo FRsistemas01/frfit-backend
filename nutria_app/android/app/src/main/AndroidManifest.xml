@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Flutter la agrega solo en builds de debug para su propia herramienta
+         de desarrollo, pero no en release — sin esto la app no tiene acceso
+         a internet en absoluto en producción. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Necesario para leer el podómetro real del celular (pantalla Hoy). -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
     <!-- Necesaria para la foto con IA del escaneo de comidas. -->
