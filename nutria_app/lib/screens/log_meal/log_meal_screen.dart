@@ -1,6 +1,10 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../../widgets/nutria_route.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../models/models.dart';
 import '../../services/diary_bus.dart';
@@ -46,15 +50,34 @@ class _LogMealScreenState extends State<LogMealScreen> {
   }
 
   Future<void> _pickPhoto() async {
-    final picker = ImagePicker();
-    final photo = await picker.pickImage(source: ImageSource.camera, imageQuality: 80);
-    if (photo == null) {
+    // En Android/iOS pedimos el permiso de cámara explícitamente antes de
+    // llamar al picker — si el usuario ya lo rechazó antes, image_picker
+    // puede tirar una excepción en vez de devolver null, y no queremos que
+    // eso crashee la pantalla.
+    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+      final status = await Permission.camera.request();
+      if (!status.isGranted) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Necesitamos permiso de cámara para esto — activalo en los ajustes del celular.'), backgroundColor: AppColors.warnSoft),
+        );
+        return;
+      }
+    }
+
+    XFile? photo;
+    try {
+      photo = await ImagePicker().pickImage(source: ImageSource.camera, imageQuality: 80);
+    } catch (_) {
       if (!mounted) return;
-      Navigator.of(context).push(nutriaRoute(ScanResultScreen(photoPath: null)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo abrir la cámara — probá de nuevo.'), backgroundColor: AppColors.warnSoft),
+      );
       return;
     }
+
     if (!mounted) return;
-    Navigator.of(context).push(nutriaRoute(ScanResultScreen(photoPath: photo.path)));
+    Navigator.of(context).push(nutriaRoute(ScanResultScreen(photoPath: photo?.path)));
   }
 
   Future<void> _quickAddFrequent(FrequentFood f) async {

@@ -27,7 +27,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSMotionUsageDescription</key>
-	<string>Nutria usa el podómetro para mostrar tus pasos y calorías activas de hoy.</string>
+	<string>FRfit usa el podómetro para mostrar tus pasos y calorías activas de hoy.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>FRfit usa la cámara para reconocer con IA lo que estás comiendo a partir de una foto.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

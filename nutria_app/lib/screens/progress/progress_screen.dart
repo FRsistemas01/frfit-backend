@@ -5,6 +5,7 @@ import '../../services/nutrition_repository.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/animated_counter.dart';
 import '../../widgets/glow_backdrop.dart';
+import '../../widgets/retry_state.dart';
 import '../../widgets/skeleton.dart';
 
 const _weekdayLetters = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
@@ -18,6 +19,7 @@ class ProgressScreen extends StatefulWidget {
 
 class _ProgressScreenState extends State<ProgressScreen> {
   ProgressOverview? _data;
+  bool _loadFailed = false;
 
   @override
   void initState() {
@@ -26,8 +28,14 @@ class _ProgressScreenState extends State<ProgressScreen> {
   }
 
   Future<void> _load() async {
+    setState(() => _loadFailed = false);
     final data = await NutritionRepository.instance.progressOverview();
-    if (mounted) setState(() => _data = data);
+    if (!mounted) return;
+    if (data == null) {
+      setState(() => _loadFailed = true);
+      return;
+    }
+    setState(() => _data = data);
   }
 
   @override
@@ -44,7 +52,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
           ),
           Expanded(
             child: d == null
-                ? const _ProgressSkeleton()
+                ? (_loadFailed ? RetryState(onRetry: _load) : const _ProgressSkeleton())
                 : RefreshIndicator(
                     color: AppColors.accent,
                     backgroundColor: AppColors.surface2,

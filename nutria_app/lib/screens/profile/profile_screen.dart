@@ -5,6 +5,7 @@ import '../../services/diary_bus.dart';
 import '../../services/nutrition_repository.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/nutria_app_bar.dart';
+import '../../widgets/retry_state.dart';
 
 const _goals = [
   (id: 'lose', icon: '📉', label: 'Bajar de peso'),
@@ -29,6 +30,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   Profile? _profile;
+  bool _loadFailed = false;
   String _goal = 'maintain';
   String _sex = 'm';
   String _activity = 'moderate';
@@ -45,8 +47,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _load() async {
+    setState(() => _loadFailed = false);
     final p = await NutritionRepository.instance.getProfile();
-    if (!mounted || p == null) return;
+    if (!mounted) return;
+    if (p == null) {
+      setState(() => _loadFailed = true);
+      return;
+    }
     setState(() {
       _profile = p;
       _goal = p.goal;
@@ -86,7 +93,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: const NutriaHeader(title: 'Tu perfil'),
       body: p == null
-          ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
+          ? (_loadFailed ? RetryState(onRetry: _load) : const Center(child: CircularProgressIndicator(color: AppColors.accent)))
           : ListView(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               children: [

@@ -8,6 +8,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/concentric_rings.dart';
 import '../../widgets/glow_backdrop.dart';
 import '../../widgets/nutria_app_bar.dart';
+import '../../widgets/retry_state.dart';
 
 class FastingScreen extends StatefulWidget {
   const FastingScreen({super.key});
@@ -18,6 +19,7 @@ class FastingScreen extends StatefulWidget {
 
 class _FastingScreenState extends State<FastingScreen> {
   FastingState? _state;
+  bool _loadFailed = false;
   Timer? _ticker;
   Duration _elapsed = Duration.zero;
   bool _busy = false;
@@ -36,9 +38,13 @@ class _FastingScreenState extends State<FastingScreen> {
   }
 
   Future<void> _load() async {
+    setState(() => _loadFailed = false);
     final state = await NutritionRepository.instance.fastingState();
     if (!mounted) return;
-    setState(() => _state = state);
+    setState(() {
+      _state = state;
+      _loadFailed = state == null;
+    });
     _tick();
   }
 
@@ -66,7 +72,7 @@ class _FastingScreenState extends State<FastingScreen> {
   Widget build(BuildContext context) {
     final state = _state;
     if (state == null) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.accent));
+      return _loadFailed ? RetryState(onRetry: _load) : const Center(child: CircularProgressIndicator(color: AppColors.accent));
     }
 
     final active = state.active;

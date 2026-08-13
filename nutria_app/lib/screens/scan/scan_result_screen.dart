@@ -50,11 +50,18 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
           ? await NutritionRepository.instance.scanPhoto(File(path))
           : await NutritionRepository.instance.scanPhoto(File('mock'));
       if (!mounted) return;
+      if (result == null) {
+        // Mostramos el aviso con la pantalla todavía montada y recién ahí
+        // volvemos atrás — usar el context después de pop() no es seguro.
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo analizar la foto — probá de nuevo.'), backgroundColor: AppColors.warnSoft),
+        );
+        Navigator.of(context).pop();
+        return;
+      }
       setState(() => _result = result);
     } on PremiumRequiredException catch (e) {
       if (!mounted) return;
-      // Mostramos el aviso con la pantalla todavía montada y recién ahí
-      // volvemos atrás — usar el context después de pop() no es seguro.
       showPremiumRequired(context, e.message);
       Navigator.of(context).pop();
     }

@@ -4,6 +4,7 @@ import '../../services/diary_bus.dart';
 import '../../services/nutrition_repository.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/nutria_app_bar.dart';
+import '../../widgets/retry_state.dart';
 
 class WeightScreen extends StatefulWidget {
   const WeightScreen({super.key});
@@ -15,6 +16,7 @@ class WeightScreen extends StatefulWidget {
 class _WeightScreenState extends State<WeightScreen> {
   List<Map<String, dynamic>> _history = [];
   bool _loading = true;
+  bool _loadFailed = false;
 
   @override
   void initState() {
@@ -23,11 +25,16 @@ class _WeightScreenState extends State<WeightScreen> {
   }
 
   Future<void> _load() async {
+    setState(() => _loadFailed = false);
     final history = await NutritionRepository.instance.weightHistory();
     if (!mounted) return;
     setState(() {
-      _history = history;
       _loading = false;
+      if (history == null) {
+        _loadFailed = true;
+      } else {
+        _history = history;
+      }
     });
   }
 
@@ -94,6 +101,8 @@ class _WeightScreenState extends State<WeightScreen> {
       appBar: const NutriaHeader(title: 'Tu peso'),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
+          : _loadFailed
+          ? RetryState(onRetry: _load)
           : ListView(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               children: [

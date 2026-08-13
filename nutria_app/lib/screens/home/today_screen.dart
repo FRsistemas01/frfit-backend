@@ -11,6 +11,7 @@ import '../../widgets/animated_counter.dart';
 import '../../widgets/concentric_rings.dart';
 import '../../widgets/glow_backdrop.dart';
 import '../../widgets/nutria_route.dart';
+import '../../widgets/retry_state.dart';
 import '../../widgets/section_label.dart';
 import '../../widgets/skeleton.dart';
 import '../log_meal/log_meal_screen.dart';
@@ -27,6 +28,7 @@ class TodayScreen extends StatefulWidget {
 
 class _TodayScreenState extends State<TodayScreen> {
   TodaySummary? _summary;
+  bool _loadFailed = false;
   int _waterGlasses = 5;
   String _username = '';
   double? _userWeightKg;
@@ -81,8 +83,13 @@ class _TodayScreenState extends State<TodayScreen> {
   }
 
   Future<void> _load() async {
+    setState(() => _loadFailed = false);
     final summary = await NutritionRepository.instance.today();
     if (!mounted) return;
+    if (summary == null) {
+      setState(() => _loadFailed = true);
+      return;
+    }
     setState(() {
       _summary = summary;
       _waterGlasses = summary.waterGlasses;
@@ -99,7 +106,7 @@ class _TodayScreenState extends State<TodayScreen> {
   Widget build(BuildContext context) {
     final s = _summary;
     if (s == null) {
-      return const TodaySkeleton();
+      return _loadFailed ? RetryState(onRetry: _load) : const TodaySkeleton();
     }
 
     final kcalProgress = s.kcalConsumed / s.kcalTarget;
