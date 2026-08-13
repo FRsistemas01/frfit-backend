@@ -130,13 +130,20 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // LayoutBuilder + ConstrainedBox(minHeight) en vez de Padding+Column
+      // directo: con el teclado abierto (sobre todo en registro, con el
+      // campo de email de más) el contenido no entraba y desbordaba abajo.
+      // Así se centra igual cuando entra, y scrollea cuando no.
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.lg),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
               Container(
                 width: 52,
                 height: 52,
@@ -198,7 +205,9 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                 ),
               ),
-            ],
+              ],
+              ),
+            ),
           ),
         ),
       ),

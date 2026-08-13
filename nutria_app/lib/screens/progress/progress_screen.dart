@@ -186,42 +186,40 @@ class _GoalHero extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.xl),
           border: Border.all(color: AppColors.accent.withValues(alpha: 0.25)),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            GlowBackdrop(
-              spread: 0.9,
-              child: Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: AppColors.accentGradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
-                  shape: BoxShape.circle,
+            Row(
+              children: [
+                GlowBackdrop(
+                  spread: 0.9,
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(colors: AppColors.accentGradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: const Text('🔥', style: TextStyle(fontSize: 21)),
+                  ),
                 ),
-                alignment: Alignment.center,
-                child: const Text('🔥', style: TextStyle(fontSize: 24)),
-              ),
+                const SizedBox(width: AppSpacing.md),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    AnimatedCounter(value: data.streakDays, style: AppTypography.numeric(size: 26)),
+                    const SizedBox(width: 6),
+                    Text(data.streakDays == 1 ? 'día seguido' : 'días seguidos', style: Theme.of(context).textTheme.bodyMedium),
+                  ],
+                ),
+              ],
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      AnimatedCounter(value: data.streakDays, style: AppTypography.numeric(size: 26)),
-                      const SizedBox(width: 6),
-                      Text(data.streakDays == 1 ? 'día seguido' : 'días seguidos', style: Theme.of(context).textTheme.bodyMedium),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Definí un peso objetivo en tu perfil para ver acá tu proyección real.',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Definí un peso objetivo en tu perfil para ver acá tu proyección real.',
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
         ),
