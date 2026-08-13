@@ -5,6 +5,7 @@ import '../../services/nutrition_repository.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/concentric_rings.dart';
 import '../../widgets/nutria_app_bar.dart';
+import '../../widgets/retry_state.dart';
 
 class MicronutrientsScreen extends StatefulWidget {
   const MicronutrientsScreen({super.key});
@@ -15,19 +16,30 @@ class MicronutrientsScreen extends StatefulWidget {
 
 class _MicronutrientsScreenState extends State<MicronutrientsScreen> {
   Micronutrients? _data;
+  bool _loadFailed = false;
 
   @override
   void initState() {
     super.initState();
-    NutritionRepository.instance.micronutrients().then((m) {
-      if (mounted) setState(() => _data = m);
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => _loadFailed = false);
+    final data = await NutritionRepository.instance.micronutrients();
+    if (!mounted) return;
+    setState(() {
+      _data = data;
+      _loadFailed = data == null;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final m = _data;
-    if (m == null) return const Center(child: CircularProgressIndicator(color: AppColors.accent));
+    if (m == null) {
+      return _loadFailed ? RetryState(onRetry: _load) : const Center(child: CircularProgressIndicator(color: AppColors.accent));
+    }
 
     final rows = [
       (label: 'Fibra', value: m.fiberG, target: 30, unit: 'g', warn: false),
@@ -45,10 +57,7 @@ class _MicronutrientsScreenState extends State<MicronutrientsScreen> {
       body: RefreshIndicator(
         color: AppColors.accent,
         backgroundColor: AppColors.surface2,
-        onRefresh: () async {
-          final data = await NutritionRepository.instance.micronutrients();
-          if (mounted) setState(() => _data = data);
-        },
+        onRefresh: _load,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),

@@ -268,9 +268,16 @@ def diary(request):
 
     serializer = MealSerializer(data=request.data, context={"request": request})
     serializer.is_valid(raise_exception=True)
+
+    # Se validan los items antes de crear nada — así un item inválido (ej.
+    # gramos negativos) no deja una comida vacía huérfana en la base.
+    item_serializers = [FoodItemSerializer(data=item) for item in request.data.get("items", [])]
+    for item_serializer in item_serializers:
+        item_serializer.is_valid(raise_exception=True)
+
     meal = serializer.save(user=request.user)
-    for item in request.data.get("items", []):
-        FoodItem.objects.create(meal=meal, **item)
+    for item_serializer in item_serializers:
+        item_serializer.save(meal=meal)
     return Response(MealSerializer(meal, context={"request": request}).data, status=201)
 
 

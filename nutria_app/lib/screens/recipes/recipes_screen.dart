@@ -7,6 +7,7 @@ import '../../services/nutrition_repository.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/nutria_app_bar.dart';
 import '../../widgets/premium_gate.dart';
+import '../../widgets/retry_state.dart';
 import '../../widgets/skeleton.dart';
 import 'recipe_detail_screen.dart';
 
@@ -28,6 +29,7 @@ class RecipesScreen extends StatefulWidget {
 
 class _RecipesScreenState extends State<RecipesScreen> {
   List<SavedRecipe>? _recipes;
+  bool _loadFailed = false;
   final _promptCtrl = TextEditingController();
   bool _generating = false;
   SavedRecipe? _draft;
@@ -40,9 +42,13 @@ class _RecipesScreenState extends State<RecipesScreen> {
   }
 
   Future<void> _load() async {
+    setState(() => _loadFailed = false);
     final recipes = await NutritionRepository.instance.recipes();
     if (!mounted) return;
-    setState(() => _recipes = recipes);
+    setState(() {
+      _recipes = recipes;
+      _loadFailed = recipes == null;
+    });
   }
 
   Future<void> _generate([String? prompt]) async {
@@ -206,7 +212,9 @@ class _RecipesScreenState extends State<RecipesScreen> {
           const SizedBox(height: AppSpacing.xl),
           Text('TUS RECETAS', style: Theme.of(context).textTheme.labelSmall),
           const SizedBox(height: AppSpacing.sm),
-          if (recipes == null)
+          if (recipes == null && _loadFailed)
+            Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: RetryState(onRetry: _load))
+          else if (recipes == null)
             const Padding(padding: EdgeInsets.symmetric(vertical: 30), child: Center(child: CircularProgressIndicator(color: AppColors.accent)))
           else if (recipes.isEmpty)
             Padding(

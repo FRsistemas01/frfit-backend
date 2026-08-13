@@ -6,6 +6,7 @@ import '../../services/diary_bus.dart';
 import '../../services/nutrition_repository.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/edit_food_item_sheet.dart';
+import '../../widgets/retry_state.dart';
 import '../../widgets/skeleton.dart';
 import '../log_meal/log_meal_screen.dart';
 import '../log_meal/manual_add_screen.dart';
@@ -25,6 +26,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
   DateTime _selected = DateTime.now();
   List<Meal> _meals = [];
   bool _loading = true;
+  bool _loadFailed = false;
 
   @override
   void initState() {
@@ -40,12 +42,20 @@ class _DiaryScreenState extends State<DiaryScreen> {
   }
 
   Future<void> _load() async {
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _loadFailed = false;
+    });
     final meals = await NutritionRepository.instance.diary(_selected);
     if (!mounted) return;
     setState(() {
-      _meals = meals;
       _loading = false;
+      if (meals == null) {
+        _loadFailed = true;
+        _meals = [];
+      } else {
+        _meals = meals;
+      }
     });
   }
 
@@ -161,6 +171,8 @@ class _DiaryScreenState extends State<DiaryScreen> {
                       ),
                     ),
                   )
+                : _loadFailed
+                ? RetryState(onRetry: _load)
                 : RefreshIndicator(
                     color: AppColors.accent,
                     backgroundColor: AppColors.surface2,

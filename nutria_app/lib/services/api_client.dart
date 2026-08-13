@@ -32,9 +32,11 @@ class ApiClient {
 
   Future<String?> login(String username, String password) async {
     try {
+      // 25s, no 8: en el plan free de Render el backend "duerme" sin uso y el
+      // primer pedido después de eso puede tardar bastante en despertarlo.
       final res = await http
           .post(Uri.parse('${ApiConfig.baseUrl}/auth/login/'), body: {'username': username, 'password': password})
-          .timeout(const Duration(seconds: 8));
+          .timeout(const Duration(seconds: 25));
       if (res.statusCode == 200) {
         _token = jsonDecode(res.body)['token'];
         await _persistToken();
@@ -50,7 +52,7 @@ class ApiClient {
     try {
       final res = await http
           .post(Uri.parse('${ApiConfig.baseUrl}/auth/register/'), body: {'username': username, 'password': password})
-          .timeout(const Duration(seconds: 8));
+          .timeout(const Duration(seconds: 25));
       if (res.statusCode == 201) {
         _token = jsonDecode(res.body)['token'];
         await _persistToken();

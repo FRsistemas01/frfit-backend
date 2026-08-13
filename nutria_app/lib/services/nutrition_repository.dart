@@ -2,19 +2,21 @@ import 'dart:io';
 
 import '../models/models.dart';
 import 'api_client.dart';
-import 'mock_data.dart';
 
-/// Repositorio que intenta traer datos reales del backend y, si no hay
-/// conexión (o el backend todavía no tiene ANTHROPIC_API_KEY configurada),
-/// cae de forma transparente a datos de ejemplo realistas — así la app
-/// siempre se ve completa mientras se termina de conectar todo.
+/// Repositorio sobre el backend real. Todos los métodos de lectura devuelven
+/// null cuando la request falla (sin internet, sesión vencida, servidor
+/// caído) — la pantalla que llama es responsable de mostrar un estado de
+/// error/reintentar, nunca de tratar un null como "no hay datos todavía".
+/// A propósito no hay fallback a datos de ejemplo: en una app que muestra
+/// comidas, calorías y análisis de fotos reales, mostrar un dato inventado
+/// como si fuera real es peor que mostrar un error.
 class NutritionRepository {
   NutritionRepository._();
   static final NutritionRepository instance = NutritionRepository._();
 
   final _api = ApiClient.instance;
 
-  Future<Profile> setGoal({
+  Future<Profile?> setGoal({
     required String goal,
     required double weightKg,
     required int heightCm,
@@ -32,8 +34,8 @@ class NutritionRepository {
       'activity_level': activityLevel,
       'target_weight_kg': ?targetWeightKg,
     });
-    if (res != null) return Profile.fromJson(res);
-    return MockData.profileForGoal(goal);
+    if (res == null) return null;
+    return Profile.fromJson(res);
   }
 
   Future<ProgressOverview?> progressOverview() async {
@@ -79,10 +81,10 @@ class NutritionRepository {
     return res != null;
   }
 
-  Future<List<Map<String, dynamic>>> weightHistory() async {
+  Future<List<Map<String, dynamic>>?> weightHistory() async {
     final list = await _api.getList('/weight/');
-    if (list != null) return list.cast<Map<String, dynamic>>();
-    return MockData.weightHistory;
+    if (list == null) return null;
+    return list.cast<Map<String, dynamic>>();
   }
 
   Future<bool> logWeight(double weightKg) async {
@@ -140,27 +142,27 @@ class NutritionRepository {
     return res != null;
   }
 
-  Future<TodaySummary> today() async {
+  Future<TodaySummary?> today() async {
     final res = await _api.get('/today/');
-    if (res != null) return TodaySummary.fromJson(res);
-    return MockData.todaySummary;
+    if (res == null) return null;
+    return TodaySummary.fromJson(res);
   }
 
   Future<bool> deleteFoodItem(int itemId) => _api.delete('/diary/item/$itemId/');
 
-  Future<List<Meal>> diary(DateTime day) async {
+  Future<List<Meal>?> diary(DateTime day) async {
     final list = await _api.getList(
       '/diary/',
       query: {'date': day.toIso8601String().split('T').first},
     );
-    if (list != null) return list.map((e) => Meal.fromJson(e)).toList();
-    return MockData.diaryMeals;
+    if (list == null) return null;
+    return list.map((e) => Meal.fromJson(e)).toList();
   }
 
-  Future<List<SavedRecipe>> recipes() async {
+  Future<List<SavedRecipe>?> recipes() async {
     final list = await _api.getList('/recipes/');
-    if (list != null) return list.map((e) => SavedRecipe.fromJson(e)).toList();
-    return MockData.recipes;
+    if (list == null) return null;
+    return list.map((e) => SavedRecipe.fromJson(e)).toList();
   }
 
   Future<bool> saveRecipe({required String name, required int kcal, double proteinG = 0, double carbsG = 0, double fatG = 0}) async {
@@ -260,27 +262,25 @@ class NutritionRepository {
     return res != null;
   }
 
-  Future<Micronutrients> micronutrients() async {
+  Future<Micronutrients?> micronutrients() async {
     final res = await _api.get('/micronutrients/');
-    if (res != null) return Micronutrients.fromJson(res);
-    return MockData.micronutrients;
+    if (res == null) return null;
+    return Micronutrients.fromJson(res);
   }
 
-  Future<CoachResponse> coachInsights({bool refresh = false}) async {
+  Future<CoachResponse?> coachInsights({bool refresh = false}) async {
     final res = await _api.get('/coach/insights/', query: refresh ? {'refresh': 'true'} : null);
-    if (res != null) {
-      return CoachResponse(
-        insights: (res['insights'] as List? ?? []).map((e) => CoachInsight.fromJson(e)).toList(),
-        stats: CoachStats.fromJson(res['stats'] ?? {}),
-      );
-    }
-    return MockData.coachInsights();
+    if (res == null) return null;
+    return CoachResponse(
+      insights: (res['insights'] as List? ?? []).map((e) => CoachInsight.fromJson(e)).toList(),
+      stats: CoachStats.fromJson(res['stats'] ?? {}),
+    );
   }
 
-  Future<FastingState> fastingState() async {
+  Future<FastingState?> fastingState() async {
     final res = await _api.get('/fasting/');
-    if (res != null) return FastingState.fromJson(res);
-    return MockData.fastingState();
+    if (res == null) return null;
+    return FastingState.fromJson(res);
   }
 
   Future<bool> startFasting() async {
@@ -310,10 +310,10 @@ class NutritionRepository {
     return res != null;
   }
 
-  Future<FoodScanResult> scanPhoto(File photo) async {
+  Future<FoodScanResult?> scanPhoto(File photo) async {
     final res = await _api.uploadPhoto('/scan-photo/', photo);
-    if (res != null) return FoodScanResult.fromJson(res);
-    return MockData.scanResult;
+    if (res == null) return null;
+    return FoodScanResult.fromJson(res);
   }
 
   /// Estado real de la suscripción + cuánto le queda del free-tier hoy.

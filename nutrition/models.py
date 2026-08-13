@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
 
@@ -28,8 +29,8 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     goal = models.CharField(max_length=16, choices=GOAL_CHOICES, default="maintain")
     sex = models.CharField(max_length=1, choices=SEX_CHOICES, default="m")
-    age = models.PositiveIntegerField(default=30)
-    height_cm = models.PositiveIntegerField(default=170)
+    age = models.PositiveIntegerField(default=30, validators=[MinValueValidator(1)])
+    height_cm = models.PositiveIntegerField(default=170, validators=[MinValueValidator(1)])
     activity_level = models.CharField(max_length=16, choices=ACTIVITY_CHOICES, default="moderate")
     daily_kcal_target = models.PositiveIntegerField(default=2000)
     protein_target_g = models.PositiveIntegerField(default=140)
@@ -37,8 +38,8 @@ class Profile(models.Model):
     fat_target_g = models.PositiveIntegerField(default=70)
     water_target_glasses = models.PositiveIntegerField(default=8)
     fasting_window_hours = models.PositiveIntegerField(default=16)
-    current_weight_kg = models.FloatField(null=True, blank=True)
-    target_weight_kg = models.FloatField(null=True, blank=True)
+    current_weight_kg = models.FloatField(null=True, blank=True, validators=[MinValueValidator(1)])
+    target_weight_kg = models.FloatField(null=True, blank=True, validators=[MinValueValidator(1)])
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -96,17 +97,17 @@ class Meal(models.Model):
 class FoodItem(models.Model):
     meal = models.ForeignKey(Meal, on_delete=models.CASCADE, related_name="items")
     name = models.CharField(max_length=120)
-    grams = models.FloatField(null=True, blank=True)
+    grams = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0)])
     kcal = models.PositiveIntegerField()
-    protein_g = models.FloatField(default=0)
-    carbs_g = models.FloatField(default=0)
-    fat_g = models.FloatField(default=0)
-    fiber_g = models.FloatField(default=0)
-    iron_mg = models.FloatField(default=0)
-    calcium_mg = models.FloatField(default=0)
-    vitamin_c_mg = models.FloatField(default=0)
-    vitamin_d_ug = models.FloatField(default=0)
-    sodium_mg = models.FloatField(default=0)
+    protein_g = models.FloatField(default=0, validators=[MinValueValidator(0)])
+    carbs_g = models.FloatField(default=0, validators=[MinValueValidator(0)])
+    fat_g = models.FloatField(default=0, validators=[MinValueValidator(0)])
+    fiber_g = models.FloatField(default=0, validators=[MinValueValidator(0)])
+    iron_mg = models.FloatField(default=0, validators=[MinValueValidator(0)])
+    calcium_mg = models.FloatField(default=0, validators=[MinValueValidator(0)])
+    vitamin_c_mg = models.FloatField(default=0, validators=[MinValueValidator(0)])
+    vitamin_d_ug = models.FloatField(default=0, validators=[MinValueValidator(0)])
+    sodium_mg = models.FloatField(default=0, validators=[MinValueValidator(0)])
     detection_confidence = models.FloatField(null=True, blank=True)
 
     def __str__(self):
@@ -161,7 +162,7 @@ class WaterLog(models.Model):
 class WeightLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="weight_logs")
     date = models.DateField()
-    weight_kg = models.FloatField()
+    weight_kg = models.FloatField(validators=[MinValueValidator(1)])
 
     class Meta:
         ordering = ["date"]

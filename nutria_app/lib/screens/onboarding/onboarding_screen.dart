@@ -67,7 +67,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Future<void> _finish() async {
     setState(() => _loading = true);
-    await NutritionRepository.instance.setGoal(
+    final profile = await NutritionRepository.instance.setGoal(
       goal: _goal,
       weightKg: _weight,
       heightCm: _height,
@@ -75,6 +75,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       sex: _sex,
       activityLevel: _activity,
     );
+    if (!mounted) return;
+    if (profile == null) {
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo guardar — revisá tu conexión y probá de nuevo.'), backgroundColor: AppColors.warnSoft),
+      );
+      return;
+    }
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('onboarding_done', true);
     if (!mounted) return;
