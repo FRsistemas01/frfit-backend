@@ -253,7 +253,14 @@ class _GoalHero extends StatelessWidget {
               const Text(' kg', style: TextStyle(color: AppColors.textMuted, fontSize: 14)),
               const Spacer(),
               if (!reached)
-                Text('faltan ${remaining.toStringAsFixed(1)} kg', style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600)),
+                Flexible(
+                  child: Text(
+                    'faltan ${remaining.toStringAsFixed(1)} kg',
+                    style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600),
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.right,
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 14),
