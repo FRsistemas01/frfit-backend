@@ -25,3 +25,4 @@ nutria_app/.flutter-plugins-dependencies
 .DS_Store
 .vscode/
 .idea/
+.claude/
